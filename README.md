@@ -1,1 +1,1 @@
-# PSRS_Algorithm
+# Parallel Sorting by Regular Sapling
