@@ -1,1 +1,1 @@
-# Parallel Sorting by Regular Sapling
+# Parallel Sorting by Regular Sampling
