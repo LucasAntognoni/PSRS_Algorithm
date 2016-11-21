@@ -1,3 +1,6 @@
+.vscode/
+psrs
+
 # Object files
 *.o
 *.ko

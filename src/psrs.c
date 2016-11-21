@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
   // Checking input arguments...
   if (argc < 3)
   {
-    printf("Use: ./psrs <Numbers> <Processes/Threads>");
+    printf("Use: ./psrs <Numbers> <Processes/Threads>\n");
     return EXIT_FAILURE;
   }
 
