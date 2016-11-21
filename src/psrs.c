@@ -19,42 +19,41 @@
 #include "tools.h"
 #include "quick_sort.h"
 
-int main(int argc, char *argv[])
-{
+void Phase1(int* Elements, const int NumberOfElements, const int NumberOfProcs);
 
-  // Checking input arguments...
-  if (argc < 3)
-  {
-    printf("Use: ./psrs <Numbers> <Processes/Threads>\n");
-    return EXIT_FAILURE;
-  }
+int main(int argc, char* argv[]) {
+    // Checking input arguments
+    if (argc < 3) {
+        printf("Use: %s <Number of Elements> <Number of Processes>\n", argv[0]);
+        return EXIT_FAILURE;
+    }
 
-  int n, p, max;
-  int *v;
+    int NumberOfElements = atoi(argv[1]);
+    int NumberOfProcs = atoi(argv[2]);
+    const int MAX_ELEMENT = 1000;
 
-  /*
-    Parsing arguments...
+    int* Elements = create_vector(NumberOfElements);
+    initialize_vector(Elements, NumberOfElements, MAX_ELEMENT);
 
-    n >> Number of elements to be sorted;
+    // PHASE 1
+    Phase1(Elements, NumberOfElements, NumberOfProcs);
 
-    p >> Number of processes and threads
-  */
+    // PHASE 2
 
-  n = atoi(argv[1]);
-  p = atoi(argv[2]);
+    // PHASE 3
 
-  v = create_vector(n);
-  inicialize_vector(v, n);
+    // PHASE 4
 
-  max = ceil(n / p);
+    print_vector(Elements, NumberOfElements);
+    destroy_vector(&Elements);
+}
 
-  // PHASE 1
-
-  // PHASE 2
-
-  // PHASE 3
-
-  // PHASE 4
-
-  print_vector(v, n);
+void Phase1(int* Elements, const int NumberOfElements, const int NumberOfProcs) {
+    #pragma omp parallel num_threads(NumberOfProcs)
+    {
+        const int ProcessNumber = omp_get_thread_num();
+        const int Start = (ProcessNumber) * NumberOfElements / NumberOfProcs;
+        const int End = (ProcessNumber + 1) * NumberOfElements / NumberOfProcs;
+        quick_sort(Elements, Start, End);
+    }
 }

@@ -4,38 +4,37 @@
 
 #include "tools.h"
 
-int *create_vector(int size)
-{
-  int *v = (int*) malloc (sizeof(int) * size);
+int* create_vector(int size) {
+    int* v = (int*)malloc(sizeof(int) * size);
 
-  return v;
+    return v;
 }
 
-void inicialize_vector(int *vector, int size)
-{
-  int i = 0;
+void initialize_vector(int* vector, int size, int max) {
+    int i = 0;
 
-  srand((unsigned)time(NULL));
+    srand((unsigned)time(NULL));
 
-  for (i = 0; i < size; i++)
-  {
-    vector[i] = rand() % 100;
-  }
+    for (i = 0; i < size; i++) {
+        vector[i] = 1 + (rand() % max);
+    }
 }
 
-void print_vector(int *vector, int size)
-{
-  int i = 0;
+void print_vector(int* vector, int size) {
+    int i = 0;
 
-  for (i = 0; i < size; i++)
-  {
-    printf("%d ", vector[i]);
-  }
-  printf("\n");
+    char* separator = "";
+    for (i = 0; i < size; i++) {
+        printf("%s%d", separator, vector[i]);
+        separator = ", ";
+    }
+    printf(".");
+    fflush(stdout);
 }
 
-void destroy_vector(int *vector)
-{
-  free(vector);
-  vector = NULL;
+void destroy_vector(int** vector) {
+    if (vector && *vector) {
+        free(*vector);
+        vector = NULL;
+    }
 }
