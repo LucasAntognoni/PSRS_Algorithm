@@ -1,13 +1,10 @@
 SRC = $(wildcard src/*.c)
-OBJ = $(patsubst src/%.c, obj/%.o, $(SRC))
+WORKER_SRC = $(wildcard src/worker/*.c)
 
 CC = mpicc
-CFLAGS = -std=c11 -Wall -Wextra -fopenmp -g 
+CFLAGS = -std=c11 -g #-Wall -Wextra 
 LDFLAGS = -lm
 
-obj/%.o: src/%.c
-	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) $(LIBS) -c $< -o $@
-
-all: $(OBJ)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(LIBS) $(OBJ) -o psrs 
+all:
+	$(CC) $(CFLAGS) $(LDFLAGS) $(LIBS) $(SRC) -fopenmp -o psrs
+	$(CC) $(CFLAGS) $(LDFLAGS) $(LIBS) $(WORKER_SRC) -o worker 
