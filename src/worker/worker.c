@@ -4,9 +4,6 @@
 
 int main(int argc, char **argv) {
   MPI_Init(&argc, &argv);
-  // for (int i = 0; i < argc; i++) {
-  //     printf("%s\n", argv[i]);
-  // }
   int NumberOfProcs;
   MPI_Comm_size(MPI_COMM_WORLD, &NumberOfProcs);
   int TotalNumberOfElements = atoi(argv[1]);
@@ -54,19 +51,27 @@ int main(int argc, char **argv) {
       MyStart = Start;
       MyEnd = End;
     }
+    Start = End;
   }
 
   for (int iProc = 0; iProc < NumberOfProcs; ++iProc) {
     int NumberOfElementsInSublist;
-    MPI_Recv(&NumberOfElementsInSublist, 1,MPI_INT, iProc, MPI_ANY_TAG,
-             MPI_COMM_WORLD, NULL);
-    
-    int* Sublist = (int*) malloc(NumberOfElementsInSublist * sizeof(*Sublist));
-    MPI_Recv(Sublist, NumberOfElementsInSublist, MPI_INT, iProc, MPI_ANY_TAG,
-             MPI_COMM_WORLD, NULL);
-  }
+    int *Sublist;
+    if (iProc != Rank) {
+      MPI_Recv(&NumberOfElementsInSublist, 1, MPI_INT, iProc, MPI_ANY_TAG,
+               MPI_COMM_WORLD, NULL);
 
-  //TODO: Send sublists to parent and let him merge with openmp
+      Sublist = (int *)malloc(NumberOfElementsInSublist * sizeof(*Sublist));
+      MPI_Recv(Sublist, NumberOfElementsInSublist, MPI_INT, iProc, MPI_ANY_TAG,
+               MPI_COMM_WORLD, NULL);
+    } else {
+      NumberOfElementsInSublist = MyEnd - MyStart;
+      Sublist = Elements + Start;
+    }
+
+    MPI_Send(&NumberOfElementsInSublist, 1, MPI_INT, 0, 0, Parent);
+    MPI_Send(Sublist, NumberOfElementsInSublist, MPI_INT, 0, 0, Parent);
+  }
 
   MPI_Finalize();
   return EXIT_SUCCESS;

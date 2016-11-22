@@ -2,7 +2,7 @@ SRC = $(wildcard src/*.c)
 WORKER_SRC = $(wildcard src/worker/*.c)
 
 CC = mpicc
-CFLAGS = -std=c11 -g #-Wall -Wextra 
+CFLAGS = -std=c11 -g -Wall -Wextra 
 LDFLAGS = -lm
 
 all:

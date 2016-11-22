@@ -56,13 +56,13 @@ int main(int argc, char *argv[]) {
       FindPivots(Samples, NumberOfProcs, NumberOfSamples, &NumberOfPivots);
 
   // Phase 3
-  Phase3(Pivots,NumberOfPivots, Elements, NumberOfElements, NumberOfProcs);
+  Phase3(Pivots, NumberOfPivots, Elements, NumberOfElements, NumberOfProcs);
 
   // PHASE 4
-
+  printf("\n\n");
   print_vector(Elements, NumberOfElements);
   destroy_vector(&Elements);
-   
+
   fgetc(stdin); // DONT FORGET TO REMOVE THIS
 }
 
@@ -111,21 +111,46 @@ void Phase3(int *Pivots, int NumberOfPivots, int *Elements,
   MPI_Init(NULL, NULL);
   MPI_Comm Communicator;
 
-  char* Args[2];
+  char *Args[2];
   char buf[20];
   Args[0] = buf;
   sprintf(Args[0], "%d", NumberOfElements);
-  Args[1] = (char*)0;
+  Args[1] = (char *)0;
   // printf("%s : %s", Args[0], Args[1]);
   MPI_Comm_spawn("./worker", Args, NumberOfProcs, MPI_INFO_NULL, 0,
                  MPI_COMM_SELF, &Communicator, MPI_ERRCODES_IGNORE);
 
   for (int iProc = 0; iProc < NumberOfProcs; iProc++) {
     const int Start = (iProc)*NumberOfElements / NumberOfProcs;
-    const int End = (iProc + 1)*NumberOfElements / NumberOfProcs;
+    const int End = (iProc + 1) * NumberOfElements / NumberOfProcs;
     const int Size = End - Start;
     MPI_Send(Elements + Start, Size, MPI_INT, iProc, 0, Communicator);
     MPI_Send(Pivots, NumberOfPivots, MPI_INT, iProc, 0, Communicator);
   }
+
+  const int NumberOfSublists = NumberOfProcs * NumberOfProcs;
+  int **Sublists = (int **)malloc(NumberOfSublists * sizeof(*Sublists));
+  int *SublistSizes = (int *)malloc(NumberOfSublists * sizeof(*SublistSizes));
+
+  for (int iProc = 0; iProc < NumberOfProcs; iProc++) {
+    for (int iLocal = 0; iLocal < NumberOfProcs; ++iLocal) {
+      const int iSublist = iProc * NumberOfProcs + iLocal;
+
+      int *SublistSize = (SublistSizes + iSublist);
+      MPI_Recv(SublistSize, 1, MPI_INT, iProc, MPI_ANY_TAG, Communicator, NULL);
+
+      Sublists[iSublist] = (int *)malloc(*SublistSize * sizeof(**Sublists));
+      MPI_Recv(Sublists[iSublist], *SublistSize, MPI_INT, iProc, MPI_ANY_TAG,
+               Communicator, NULL);
+    }
+  }
+
+  for (int iSublist = 0; iSublist < NumberOfSublists; ++iSublist) {
+    printf("s: %d\n", SublistSizes[iSublist]);
+    for (int iElement = 0; iElement < SublistSizes[iSublist]; ++iElement) {
+      printf("%d ", Sublists[iSublist][iElement]);
+    }
+  }
+
   MPI_Finalize();
 }
