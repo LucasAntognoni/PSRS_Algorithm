@@ -145,12 +145,5 @@ void Phase3(int *Pivots, int NumberOfPivots, int *Elements,
     }
   }
 
-  for (int iSublist = 0; iSublist < NumberOfSublists; ++iSublist) {
-    printf("s: %d\n", SublistSizes[iSublist]);
-    for (int iElement = 0; iElement < SublistSizes[iSublist]; ++iElement) {
-      printf("%d ", Sublists[iSublist][iElement]);
-    }
-  }
-
   MPI_Finalize();
 }

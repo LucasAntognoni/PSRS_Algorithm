@@ -27,6 +27,10 @@ int main(int argc, char **argv) {
   MPI_Recv(Elements, NumberOfElements, MPI_INT, 0, MPI_ANY_TAG, Parent, NULL);
   MPI_Recv(Pivots, NumberOfPivots, MPI_INT, 0, MPI_ANY_TAG, Parent, NULL);
 
+  // for(int i = 0; i < NumberOfElements; ++i) {
+  //   printf("%d, ", Elements[i]);
+  // }
+
   int MyStart, MyEnd;
   int Start = 0;
   for (int iProc = 0; iProc < NumberOfProcs; ++iProc) {
@@ -66,9 +70,12 @@ int main(int argc, char **argv) {
                MPI_COMM_WORLD, NULL);
     } else {
       NumberOfElementsInSublist = MyEnd - MyStart;
-      Sublist = Elements + Start;
+      Sublist = Elements + MyStart;
     }
 
+      // for (int i = 0; i < NumberOfElementsInSublist; ++i) {
+      //   printf("%d, ", Sublist[i]);
+      // }
     MPI_Send(&NumberOfElementsInSublist, 1, MPI_INT, 0, 0, Parent);
     MPI_Send(Sublist, NumberOfElementsInSublist, MPI_INT, 0, 0, Parent);
   }
