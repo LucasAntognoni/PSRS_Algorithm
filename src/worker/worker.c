@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
     MPI_Recv(Elements, NumberOfElements, MPI_INT, 0, MPI_ANY_TAG, Parent, NULL);
     MPI_Recv(Pivots, NumberOfPivots, MPI_INT, 0, MPI_ANY_TAG, Parent, NULL);
 
-    int MyStart, MyEnd;
+    int MyStart = 0, MyEnd = 0;
     int Start = 0;
     for (int iProc = 0; iProc < NumberOfProcs; ++iProc) {
         int iElement = Start;
