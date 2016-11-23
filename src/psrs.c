@@ -1,13 +1,17 @@
 /*
-
 =======================================================================
+Class Assignment:
   Parallel Sorting by Regular Sampling
 
   Quicksort Algorithm
 
   Quinn, Michael J. Parallel Programming in C with MPI and OpenMP. 2003
 =======================================================================
-
+Brought to you by:
+    - Gabriel Scalet Bicalho,           8937204
+    - Lucas Antognoni de Castro,        8936951
+    - Nilson Furquim da Silva,          8937250
+    - Victor Augusto Moneratto Saia,    8937009
 */
 
 #include <math.h>
