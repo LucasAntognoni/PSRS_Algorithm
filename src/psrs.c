@@ -54,35 +54,59 @@ int main(int argc, char* argv[]) {
     int NumberOfProcs = atoi(argv[2]);
     const int MAX_ELEMENT = 1000;
 
-    //
-    // IMPORTANTE:
-    //
+    // ************************************************************************
+    // IMPORTANT: ELEMENTS IS THE "INPUT VECTOR", CHANGES SHOULD BE DONE HERE
+    // ************************************************************************
     int* Elements = create_vector(NumberOfElements);
     initialize_vector(Elements, NumberOfElements, MAX_ELEMENT);
 
-    // Phases 1
+    //
+    // NOTE: Phase 1
+    //
     int NumberOfSamples;
     int* Samples = FindSamples(Elements, NumberOfElements, NumberOfProcs,
                                &NumberOfSamples);
-
-    // Phase 2
+    //
+    // NOTE: Phase 2
+    //
     int NumberOfPivots;
     int* Pivots =
         FindPivots(Samples, NumberOfProcs, NumberOfSamples, &NumberOfPivots);
+    
+    // Free unused memory
+    destroy_vector(&Samples);
 
-    // Phase 3
+    //
+    // NOTE: Phase 3
+    //
     int** Sublists;
     int* SublistSizes;
     MakeSublists(Pivots, NumberOfPivots, Elements, NumberOfElements,
                  NumberOfProcs, &SublistSizes, &Sublists);
+    // Free unused memory
+    destroy_vector(&Pivots);
+    destroy_vector(&Elements);
 
-    // PHASE 4
+    //
+    // NOTE: Phase 4
+    //
     int* Final = MergeSublists(SublistSizes, Sublists, NumberOfProcs, NumberOfElements);
 
+    // Free unused memory
+    destroy_vector(&SublistSizes);
+    {
+        const int NumberOfSublists = NumberOfProcs * NumberOfProcs;
+        for (int iSublist = 0; iSublist < NumberOfSublists; ++iSublist) {
+            free(Sublists[iSublist]);
+        }
+        free(Sublists);
+    }
+
     print_vector(Final, NumberOfElements);
-    destroy_vector(&Elements);
+    destroy_vector(&Final);
 }
 
+// Sort parts of Elements and find it's samples (with OpenMP)
 int* FindSamples(int* Elements,
                  const int NumberOfElements,
                  const int NumberOfProcs,
@@ -94,11 +118,13 @@ int* FindSamples(int* Elements,
 
 #pragma omp parallel num_threads(NumberOfProcs)
     {
+        // Sort NumberOfProcs parts of Elements
         const int ProcessNumber = omp_get_thread_num();
         const int Start = (ProcessNumber)*NumberOfElements / NumberOfProcs;
         const int End = (ProcessNumber + 1) * NumberOfElements / NumberOfProcs;
         quick_sort(Elements, Start, End - 1);
 
+        // Find regular samples
         for (int iLocal = 0; iLocal < NumberOfProcs; iLocal++) {
             const int iElement =
                 Start + (int)(iLocal * (NumberOfElements / (float)ProcsSqr));
@@ -110,6 +136,7 @@ int* FindSamples(int* Elements,
     return Samples;
 }
 
+// Find pivots from samples (single thread)
 int* FindPivots(int* Samples,
                 int NumberOfProcs,
                 int NumberOfSamples,
@@ -127,6 +154,8 @@ int* FindPivots(int* Samples,
     return Pivots;
 }
 
+// Send Elements parts to other processes, and let them
+// comunicate and switch parts (with MPI)
 void MakeSublists(int* Pivots,
                   int NumberOfPivots,
                   int* Elements,
@@ -176,6 +205,8 @@ void MakeSublists(int* Pivots,
     MPI_Finalize();
 }
 
+// Merge sublists made from worker processes into a single result 
+// ordered array
 int* MergeSublists(int* SublistSizes,
                    int** Sublists,
                    int NumberOfProcs,
@@ -185,6 +216,8 @@ int* MergeSublists(int* SublistSizes,
 
     int* Elements = (int*)malloc(NumberOfElements * sizeof(*Elements));
     int* Starts = (int*)malloc(NumberOfProcs * sizeof(*Starts));
+    
+    // Find start element index for each thread
     Starts[0] = 0;
     for (int iProc = 1; iProc < NumberOfProcs; ++iProc) {
         int Sum = 0;
@@ -195,10 +228,13 @@ int* MergeSublists(int* SublistSizes,
     }
 
     int* Iterators = calloc(NumberOfSublists, sizeof(*Iterators));
+
+    // Merge sublists and put them in a resulting array 
 #pragma omp parallel num_threads(NumberOfProcs)
     {
         const int ProcNum = omp_get_thread_num();
         const int StartSublist = ProcNum * BlockSize;
+        
         int Size;
         if (ProcNum == NumberOfProcs-1) {
             Size =  NumberOfElements - Starts[ProcNum];
@@ -227,28 +263,8 @@ int* MergeSublists(int* SublistSizes,
             Iterators[MinimumSublist]++;
         }
     }
+    free(Iterators);
+    free(Starts);
 
     return Elements;
 }
-
-// void Merge(int* A, int ASize, int *B, int BSize, int *Out) {
-//     const int FullSize = ASize + BSize;
-//     int iA = 0, iB = 0;
-//     for(int iElement = 0; iElement < FullSize; ++iElement) {
-//         if(iA == ASize) {
-//             Out[iElement] = B[iB];
-//             iB++;
-//         } else if(iB == ASize) {
-//             Out[iElement] = A[iA];
-//             iA++;
-//         } else {
-//             if (A[iA] < B[iB]) {
-//                 Out[iElement] = A[iA];
-//                 iA++;
-//             } else {
-//                 Out[iElement] = B[iB];
-//                 iB++;
-//             }
-//         }
-//     }
-// }
